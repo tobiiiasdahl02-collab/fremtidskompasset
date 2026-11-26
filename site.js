@@ -724,6 +724,59 @@
     }
   });
 
+  // ---------------------------------------------------------------- Menu
+  // Wide screens: each heading opens a small dropdown. Narrow screens: the Menu button opens
+  // one panel with every heading and its sections.
+  const header = document.querySelector('.site-header');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const groups = [...document.querySelectorAll('.menu-group')];
+
+  function closeGroups(except) {
+    groups.forEach((group) => {
+      if (group === except) return;
+      group.classList.remove('open');
+      group.querySelector('.menu-title').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function closeMenu() {
+    closeGroups();
+    header.classList.remove('menu-open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  groups.forEach((group) => {
+    const title = group.querySelector('.menu-title');
+    title.addEventListener('click', () => {
+      const open = !group.classList.contains('open');
+      closeGroups(group);
+      group.classList.toggle('open', open);
+      title.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  menuToggle.addEventListener('click', () => {
+    const open = !header.classList.contains('menu-open');
+    closeGroups();
+    header.classList.toggle('menu-open', open);
+    menuToggle.setAttribute('aria-expanded', String(open));
+  });
+
+  // Picking a section, clicking outside or pressing Escape closes the menu.
+  document.getElementById('site-menu').addEventListener('click', (event) => {
+    if (event.target.closest('a')) closeMenu();
+  });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.site-header')) closeMenu();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const openTitle = document.querySelector('.menu-group.open .menu-title');
+    const wasOpen = openTitle || header.classList.contains('menu-open');
+    closeMenu();
+    if (wasOpen) (openTitle || menuToggle).focus();
+  });
+
   // ---------------------------------------------------------------- Contact form
   // Not connected to an inbox yet, so it only checks the fields.
   const form = $('contact-form');

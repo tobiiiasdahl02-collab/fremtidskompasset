@@ -157,11 +157,66 @@ p { margin: 0; }
   min-width: 0;
 }
 .brand-mark { width: 34px; height: 34px; flex: none; }
-.nav-links { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; }
-.nav-links a { text-decoration: none; font-size: 15px; font-weight: 500; color: var(--muted); }
-.nav-links a:hover { color: var(--ink); }
+/* Menu: five groups, each with the page's sections underneath. Dropdowns on wide screens,
+   one panel with every heading on narrow screens. */
+.menu { display: flex; align-items: center; gap: 4px; }
+.menu-group { position: relative; }
+.menu-title, .menu-single {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border-radius: 999px; border: 0; background: none;
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); text-decoration: none; cursor: pointer;
+}
+.menu-title:hover, .menu-single:hover, .menu-title[aria-expanded="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.menu-title svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+.menu-title[aria-expanded="true"] svg { transform: rotate(180deg); }
+.menu-list {
+  list-style: none; margin: 0; padding: 8px;
+  position: absolute; top: calc(100% + 8px); left: 0; min-width: 270px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 18px 40px -16px rgba(16, 28, 46, 0.35);
+  display: none;
+}
+.menu-group.open .menu-list { display: grid; }
+.menu-list a { display: grid; gap: 1px; padding: 9px 12px; border-radius: 10px; text-decoration: none; color: var(--ink); }
+.menu-list a:hover, .menu-list a:focus-visible { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.menu-list b { font-size: 15px; font-weight: 600; }
+.menu-list small { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.menu-group:last-of-type .menu-list { left: auto; right: 0; }
+.menu-toggle {
+  display: none; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.menu-toggle svg { width: 18px; height: 18px; }
 .nav .btn { padding: 9px 18px; font-size: 15px; }
-@media (max-width: 860px) { .nav-links { display: none; } }
+@media (prefers-reduced-motion: reduce) { .menu-title svg { transition: none; } }
+@media (max-width: 1000px) {
+  .menu-toggle { display: inline-flex; }
+  .nav .btn { display: none; }
+  .menu {
+    display: none; position: absolute; top: 100%; left: 0; right: 0;
+    max-height: calc(100vh - 70px); overflow-y: auto;
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    box-shadow: 0 18px 40px -20px rgba(16, 28, 46, 0.4);
+    padding: 8px 24px 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; align-items: start;
+  }
+  .site-header.menu-open .menu { display: grid; }
+  .menu-group { display: grid; gap: 2px; }
+  .menu-title { pointer-events: none; padding: 12px 0 4px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .menu-title svg { display: none; }
+  .menu-list { display: grid; position: static; box-shadow: none; border: 0; padding: 0; min-width: 0; background: none; }
+  .menu-list a { padding: 8px 0; }
+  .menu-list a:hover { background: none; text-decoration: underline; }
+  .menu-single { padding: 12px 0; font-size: 16px; color: var(--ink); }
+  .menu-cta { grid-column: 1 / -1; margin-top: 8px; }
+}
+@media (min-width: 1001px) { .menu-cta { display: none; } }
+@media (max-width: 560px) {
+  .menu { grid-template-columns: 1fr; padding-inline: 16px; gap: 0; }
+  .menu-list small { display: none; }
+  .menu-list a { padding: 7px 0; }
+}
 @media (max-width: 400px) { .brand span { font-size: 16px; } .nav .btn { padding: 8px 14px; } }
 
 /* Hero: the evening sky from the app's background photo */
@@ -464,11 +519,11 @@ footer { border-top: 1px solid var(--line); padding-block: 36px; font-size: 15px
 .term h3 { font-size: 21px; }
 .term p { color: var(--muted); font-size: 16px; }
 /* ---- Working features: everything below makes the website do what the app does ---- */
-.nav-links .count {
+.menu .count {
   display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px;
   margin-left: 4px; border-radius: 999px; background: var(--c-and); color: #FFFFFF; font-size: 12px; font-weight: 700;
 }
-.nav-links .count:empty { display: none; }
+.menu .count:empty { display: none; }
 .app-btn { text-decoration: none; cursor: pointer; }
 .app-btn:hover { filter: brightness(1.08); }
 
@@ -671,14 +726,46 @@ a.feature h3::after { content: " →"; color: var(--muted); }
       <svg class="brand-mark rose" viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="78" stroke="currentColor" stroke-width="5" fill="none"/><polygon points="198.1,101.9 150,150 150.0,137.3" fill="var(--muted)"/><polygon points="198.1,101.9 150,150 162.7,150.0" fill="var(--muted)" opacity=".5"/><polygon points="198.1,198.1 150,150 162.7,150.0" fill="var(--muted)"/><polygon points="198.1,198.1 150,150 150.0,162.7" fill="var(--muted)" opacity=".5"/><polygon points="101.9,198.1 150,150 150.0,162.7" fill="var(--muted)"/><polygon points="101.9,198.1 150,150 137.3,150.0" fill="var(--muted)" opacity=".5"/><polygon points="101.9,101.9 150,150 137.3,150.0" fill="var(--muted)"/><polygon points="101.9,101.9 150,150 150.0,137.3" fill="var(--muted)" opacity=".5"/><polygon points="150.0,4.0 150,150 139.0,139.0" fill="var(--c-ung)"/><polygon points="150.0,4.0 150,150 161.0,139.0" fill="var(--c-ung)" opacity=".5"/><polygon points="296.0,150.0 150,150 161.0,139.0" fill="var(--c-vid)"/><polygon points="296.0,150.0 150,150 161.0,161.0" fill="var(--c-vid)" opacity=".5"/><polygon points="150.0,296.0 150,150 161.0,161.0" fill="var(--c-eft)"/><polygon points="150.0,296.0 150,150 139.0,161.0" fill="var(--c-eft)" opacity=".5"/><polygon points="4.0,150.0 150,150 139.0,161.0" fill="var(--c-and)"/><polygon points="4.0,150.0 150,150 139.0,139.0" fill="var(--c-and)" opacity=".5"/><circle cx="150" cy="150" r="5" fill="currentColor"/></svg>
       <span>Fremtidskompasset</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="#udforsk">Udforsk</a></li>
-      <li><a href="#soeg">Søg</a></li>
-      <li><a href="#forslag">Hvad passer til dig?</a></li>
-      <li><a href="#jobs">Jobs</a></li>
-      <li><a href="#ordbog">Ordbog</a></li>
-      <li><a href="#favoritter">Favoritter<span class="count" id="fav-count"></span></a></li>
-    </ul>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+    <div class="menu" id="site-menu">
+      <div class="menu-group">
+        <button class="menu-title" type="button" aria-expanded="false" aria-controls="menu-uddannelser">Uddannelser<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="menu-list" id="menu-uddannelser">
+          <li><a href="#udforsk"><b>Udforsk uddannelser</b><small>Retninger, krav og snit</small></a></li>
+          <li><a href="#soeg"><b>Søg</b><small>Find en uddannelse eller et job</small></a></li>
+          <li><a href="#ordbog"><b>Ordbog</b><small>Forstå ordene, før du vælger</small></a></li>
+        </ul>
+      </div>
+      <div class="menu-group">
+        <button class="menu-title" type="button" aria-expanded="false" aria-controls="menu-dig">Find dig selv<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="menu-list" id="menu-dig">
+          <li><a href="#forslag"><b>Hvad passer til dig?</b><small>Udfyld profilen, og få 5 forslag</small></a></li>
+          <li><a href="#test"><b>Personlighedstest</b><small>12 spørgsmål og din persona</small></a></li>
+          <li><a href="#ai"><b>Spørg AI-guiden</b><small>Find min fremtid og AI-vejleder</small></a></li>
+        </ul>
+      </div>
+      <div class="menu-group">
+        <button class="menu-title" type="button" aria-expanded="false" aria-controls="menu-jobs">Jobs<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="menu-list" id="menu-jobs">
+          <li><a href="#jobs" data-jobs-open="jobs"><b>Jobs</b><small>Hvad laver de, og hvordan bliver du det?</small></a></li>
+          <li><a href="#jobs" data-jobs-open="placements"><b>Praktik &amp; lærepladser</b><small>Forskellen, og hvor du finder dem</small></a></li>
+        </ul>
+      </div>
+      <a class="menu-single" href="#favoritter">Favoritter<span class="count" id="fav-count"></span></a>
+      <div class="menu-group">
+        <button class="menu-title" type="button" aria-expanded="false" aria-controls="menu-om">Om<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="menu-list" id="menu-om">
+          <li><a href="#funktioner"><b>Det hele ét sted</b><small>Alle funktioner på siden</small></a></li>
+          <li><a href="#saadan"><b>Sådan virker det</b><small>Fra “ved ikke” til en plan</small></a></li>
+          <li><a href="#skoler"><b>For skoler og vejledere</b><small>Brug det i vejledningen</small></a></li>
+          <li><a href="#spoergsmaal"><b>Spørgsmål og svar</b><small>Det bliver vi tit spurgt om</small></a></li>
+          <li><a href="#hent"><b>Appen er på vej</b><small>Til iPhone og Android</small></a></li>
+          <li><a href="#kontakt"><b>Kontakt</b><small>Skriv til os</small></a></li>
+          <li><a href="#privatliv"><b>Privatliv</b><small>Hvad der bliver gemt</small></a></li>
+        </ul>
+      </div>
+      <a class="btn btn-primary menu-cta" href="#ai">Find min fremtid</a>
+    </div>
     <a class="btn btn-primary" href="#ai">Find min fremtid</a>
   </nav>
 </header>
