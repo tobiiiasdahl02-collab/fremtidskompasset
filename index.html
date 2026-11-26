@@ -2,23 +2,1111 @@
 <html lang="da">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fremtidskompasset</title>
-<meta name="description" content="Fremtidskompasset: find uddannelser, job, praktik og lærepladser, der passer til dig.">
-<link rel="canonical" href="https://fremtidskompasset.expo.app/">
-<meta http-equiv="refresh" content="0; url=https://fremtidskompasset.expo.app/">
-<script>
-  // The app now lives on Expo Hosting. Keep the path, so /fremtidskompasset/jobs opens /jobs there.
-  var path = location.pathname.replace(/^\/fremtidskompasset\/?/, '/');
-  location.replace('https://fremtidskompasset.expo.app' + path + location.search + location.hash);
-</script>
+<meta name="description" content="Fremtidskompasset samler uddannelser, job, praktik og lærepladser ét sted, med krav, snit, forslag og AI-vejledning.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
 <style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #F5F7FA; color: #15202D; text-align: center; padding: 16px; }
-  @media (prefers-color-scheme: dark) { body { background: #0F151D; color: #E9EEF4; } a { color: #6EA4EE; } }
-  a { color: #2F64B3; font-weight: 600; }
+/* Layout: an evening-sky hero with the app itself in a phone, then the app's own four level colours carry the sections.
+   Every section works like the app: the data and logic come from engine.js, built from the app's code. */
+:root {
+  --paper: #F5F7FA;
+  --surface: #FFFFFF;
+  --ink: #15202D;
+  --muted: #5F6876;
+  --line: #DCE2EA;
+  --sky-top: #C9DCF0;
+  --sky-low: #F2E2C6;
+  --sun: #C98A2E;
+  --action: #2F64B3;
+  --action-ink: #FFFFFF;
+  /* The app's level colours, used as they are in the app. */
+  --c-ung: #4A90E2;
+  --c-vid: #347E83;
+  --c-eft: #3F5F9E;
+  --c-and: #B44E6B;
+  --c-ai: #61708A;
+  --phone-veil: rgba(255, 255, 255, 0.6);
+  --phone-ink: #000000;
+  --font-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --radius: 18px;
+  --wrap: 1120px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F151D;
+    --surface: #18212C;
+    --ink: #E9EEF4;
+    --muted: #A3ADBA;
+    --line: #2A3542;
+    --sky-top: #16263A;
+    --sky-low: #3A2E22;
+    --sun: #E7B36A;
+    --action: #6EA4EE;
+    --action-ink: #0D1622;
+    --phone-veil: rgba(0, 0, 0, 0.6);
+    --phone-ink: #FFFFFF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F151D;
+  --surface: #18212C;
+  --ink: #E9EEF4;
+  --muted: #A3ADBA;
+  --line: #2A3542;
+  --sky-top: #16263A;
+  --sky-low: #3A2E22;
+  --sun: #E7B36A;
+  --action: #6EA4EE;
+  --action-ink: #0D1622;
+  --phone-veil: rgba(0, 0, 0, 0.6);
+  --phone-ink: #FFFFFF;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+h1, h2, h3 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+p { margin: 0; }
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+@media (max-width: 480px) { .wrap { padding-inline: 16px; } }
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rose { width: 100%; height: 100%; color: var(--ink); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary { background: var(--action); color: var(--action-ink); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { border-color: var(--ink); color: var(--ink); background: transparent; }
+.btn-ghost:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+/* Header */
+.site-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-block: 12px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  margin-right: auto;
+  min-width: 0;
+}
+.brand-mark { width: 34px; height: 34px; flex: none; }
+.nav-links { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; }
+.nav-links a { text-decoration: none; font-size: 15px; font-weight: 500; color: var(--muted); }
+.nav-links a:hover { color: var(--ink); }
+.nav .btn { padding: 9px 18px; font-size: 15px; }
+@media (max-width: 860px) { .nav-links { display: none; } }
+@media (max-width: 400px) { .brand span { font-size: 16px; } .nav .btn { padding: 8px 14px; } }
+
+/* Hero: the evening sky from the app's background photo */
+.hero {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-low) 100%);
+  overflow: hidden;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 48px;
+  padding-block: 72px 0;
+}
+.hero-copy { display: grid; gap: 22px; padding-bottom: 72px; min-width: 0; }
+.hero h1 { font-size: clamp(42px, 6.4vw, 76px); font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--c-eft); }
+:root[data-theme="dark"] .hero h1 em { color: var(--sun); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero h1 em { color: var(--sun); } }
+.hero .lead { font-size: 19px; max-width: 34em; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-note { font-size: 14px; color: var(--muted); }
+.hero-phone { justify-self: center; align-self: end; }
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr; padding-block: 48px 0; gap: 8px; }
+  .hero-copy { padding-bottom: 32px; }
+}
+
+/* Phone mock-up of the app's home screen */
+.phone {
+  width: 300px;
+  max-width: 78vw;
+  aspect-ratio: 9 / 19;
+  border-radius: 46px 46px 0 0;
+  padding: 12px 12px 0;
+  background: #0B0F14;
+  box-shadow: 0 30px 60px -20px rgba(16, 28, 46, 0.45);
+}
+.screen {
+  position: relative;
+  height: 100%;
+  border-radius: 36px 36px 0 0;
+  overflow: hidden;
+  background: url("fjord.jpg") center / cover;
+  color: var(--phone-ink);
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.screen::before { content: ""; position: absolute; inset: 0; background: var(--phone-veil); }
+.screen > * { position: relative; }
+.island { width: 92px; height: 26px; border-radius: 20px; background: #0B0F14; margin: 10px auto 0; }
+.app-title { text-align: center; font-size: 21px; font-weight: 600; margin-top: 46px; }
+.app-body { margin-top: auto; padding: 0 12px 10px; display: grid; gap: 9px; }
+.app-question { text-align: center; font-size: 14px; font-weight: 700; }
+.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.app-btn {
+  aspect-ratio: 1.4;
+  border-radius: 12px;
+  padding: 7px;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.app-btn b { font-size: 10px; line-height: 1.2; font-weight: 800; }
+.app-btn small { font-size: 8px; line-height: 1.25; opacity: 0.9; }
+.app-wide { aspect-ratio: auto; grid-column: 1 / -1; align-items: center; padding: 9px; }
+.app-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 8px 4px 14px;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  font-size: 8px;
+  text-align: center;
+  color: var(--muted);
+}
+.app-tabs span { display: grid; justify-items: center; gap: 2px; }
+.app-tabs span:first-child { color: var(--ink); font-weight: 600; }
+.app-tabs svg { width: 18px; height: 18px; }
+
+/* Sections */
+section { padding-block: 96px; }
+@media (max-width: 640px) { section { padding-block: 64px; } }
+.section-head { display: grid; gap: 14px; max-width: 40em; margin-bottom: 44px; }
+.section-head h2 { font-size: clamp(32px, 4.2vw, 48px); font-weight: 700; }
+.section-head p { color: var(--muted); font-size: 18px; }
+
+/* Features */
+.features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 32px; }
+@media (max-width: 860px) { .features { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+.feature { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #FFFFFF;
+}
+.feature-icon svg { width: 22px; height: 22px; }
+.feature h3 { font-size: 21px; }
+.feature p { color: var(--muted); font-size: 16px; }
+
+/* Steps: a real sequence, so they are numbered */
+.how { background: var(--surface); border-block: 1px solid var(--line); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; counter-reset: step; }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; gap: 28px; } }
+.steps li { display: grid; gap: 10px; align-content: start; counter-increment: step; min-width: 0; }
+.steps li::before {
+  content: counter(step);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+}
+.steps h3 { font-size: 22px; }
+.steps p { color: var(--muted); font-size: 16px; }
+
+/* Schools */
+.schools-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+@media (max-width: 860px) { .schools-grid { grid-template-columns: 1fr; gap: 28px; } }
+.checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.checklist li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; font-size: 17px; }
+.checklist svg { width: 22px; height: 22px; color: var(--c-vid); margin-top: 3px; }
+.schools .btn { margin-top: 8px; justify-self: start; }
+
+/* FAQ */
+.faq-list { display: grid; max-width: 820px; }
+.faq-list details { border-bottom: 1px solid var(--line); }
+.faq-list details:first-child { border-top: 1px solid var(--line); }
+.faq-list summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; font-size: 24px; line-height: 1; color: var(--muted); }
+.faq-list details[open] summary::after { content: "−"; }
+.faq-list details p { padding-bottom: 20px; color: var(--muted); max-width: 44em; }
+
+/* Download */
+.download-card {
+  border-radius: 28px;
+  padding: clamp(28px, 5vw, 56px);
+  background: linear-gradient(135deg, var(--c-eft), var(--c-vid));
+  color: #FFFFFF;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: center;
+}
+@media (max-width: 760px) { .download-card { grid-template-columns: 1fr; } }
+.download-card h2 { font-size: clamp(30px, 4vw, 44px); }
+.download-card p { opacity: 0.9; margin-top: 12px; max-width: 32em; }
+.stores { display: grid; gap: 10px; }
+.store {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  min-width: 210px;
+}
+.store svg { width: 24px; height: 24px; flex: none; }
+.store span { display: grid; line-height: 1.2; }
+.store small { font-size: 12px; opacity: 0.8; }
+.store b { font-size: 17px; }
+
+/* Contact */
+.contact-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 48px; }
+@media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; gap: 28px; } }
+form { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
+@media (max-width: 480px) { form { padding: 20px; } }
+.field { display: grid; gap: 6px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .row-2 { grid-template-columns: 1fr; } }
+label { font-size: 14px; font-weight: 600; }
+input, select, textarea {
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 12px;
+  width: 100%;
+}
+textarea { min-height: 120px; resize: vertical; }
+form .btn { justify-self: start; }
+.form-status { font-size: 15px; color: var(--muted); }
+
+/* Privacy + footer */
+.privacy { padding-block: 64px; }
+.privacy-text { display: grid; gap: 12px; max-width: 44em; color: var(--muted); }
+.privacy-text h2 { font-size: 28px; color: var(--ink); margin-bottom: 4px; }
+footer { border-top: 1px solid var(--line); padding-block: 36px; font-size: 15px; color: var(--muted); }
+.footer-grid { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 8px 22px; list-style: none; margin: 0; padding: 0; }
+.footer-links a { text-decoration: none; }
+.footer-links a:hover { color: var(--ink); text-decoration: underline; }
+
+/* Explorer */
+.level-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pill:hover { border-color: var(--pill, var(--action)); }
+.pill .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pill); }
+.pill[aria-selected="true"], .pill[aria-pressed="true"] { background: var(--pill, var(--action)); border-color: var(--pill, var(--action)); color: #FFFFFF; }
+.pill[aria-selected="true"] .dot { background: #FFFFFF; }
+.pill:disabled { opacity: 0.45; cursor: not-allowed; }
+.explorer { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 24px; align-items: start; }
+.explorer.single { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+@media (max-width: 900px) { .explorer { grid-template-columns: 1fr; } }
+.dir-list { display: grid; gap: 10px; }
+.dir-card {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.dir-card:hover { border-color: var(--dir); }
+.dir-card[aria-pressed="true"] { border-color: var(--dir); box-shadow: inset 0 0 0 1px var(--dir); }
+.dir-card b { display: block; font-size: 17px; line-height: 1.3; }
+.dir-card small { color: var(--muted); font-size: 14px; }
+.badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--dir);
+  color: #FFFFFF;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  flex: none;
+}
+.detail {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+@media (max-width: 480px) { .detail { padding: 20px; } }
+.detail-head { display: flex; align-items: center; gap: 14px; }
+.detail h3 { font-size: clamp(26px, 3vw, 32px); }
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 18px; margin: 0; }
+@media (max-width: 480px) { .facts { grid-template-columns: 1fr; gap: 2px; } .facts dd { margin-bottom: 8px; } }
+.facts dt { font-weight: 600; color: var(--muted); font-size: 15px; }
+.facts dd { margin: 0; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chip { padding: 6px 12px; border-radius: 999px; background: color-mix(in srgb, var(--dir) 15%, transparent); font-size: 14px; font-weight: 600; }
+
+/* Glossary */
+.terms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .terms { grid-template-columns: 1fr; } }
+.term { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 8px; align-content: start; }
+.term h3 { font-size: 21px; }
+.term p { color: var(--muted); font-size: 16px; }
+/* ---- Working features: everything below makes the website do what the app does ---- */
+.nav-links .count {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px;
+  margin-left: 4px; border-radius: 999px; background: var(--c-and); color: #FFFFFF; font-size: 12px; font-weight: 700;
+}
+.nav-links .count:empty { display: none; }
+.app-btn { text-decoration: none; cursor: pointer; }
+.app-btn:hover { filter: brightness(1.08); }
+
+.search-box { position: relative; max-width: 640px; }
+.search-box svg { position: absolute; left: 16px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search-box input { padding: 14px 16px 14px 46px; font-size: 17px; border-radius: 14px; background: var(--surface); }
+.muted { color: var(--muted); }
+.small { font-size: 15px; }
+.stack { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.empty { display: grid; gap: 4px; padding: 20px 0; }
+.empty b { font-size: 17px; }
+
+/* Favourite star */
+.star {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 0; background: transparent; color: var(--muted); cursor: pointer;
+}
+.star:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.star svg { width: 24px; height: 24px; }
+.star[aria-pressed="true"] { color: var(--sun); }
+.star[aria-pressed="true"] svg path { fill: currentColor; }
+
+/* Direction details */
+.rules { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.rules li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 12px; }
+.rules li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dir); margin-top: 10px; }
+.programs { display: grid; gap: 12px; margin-top: 10px; }
+.program {
+  background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 16px 16px 16px 18px; display: grid; gap: 6px; scroll-margin-top: 100px;
+}
+.program.highlight { border-color: var(--dir); box-shadow: inset 0 0 0 1px var(--dir); }
+.program-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.program h4 { margin: 8px 0 0; font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
+.program .meta { font-size: 15px; color: var(--muted); }
+.program .meta b { font-weight: 600; }
+.program .from { font-size: 14px; font-weight: 600; color: var(--muted); }
+.link-btn {
+  border: 0; background: none; padding: 0; font: inherit; color: var(--action); font-weight: 600;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-align: left;
+}
+.hub { display: grid; gap: 12px; }
+.hub-card {
+  display: grid; gap: 4px; padding: 18px 20px; border-radius: 14px; color: #FFFFFF;
+  text-decoration: none; border: 0; font: inherit; text-align: left; cursor: pointer;
+}
+.hub-card b { font-family: var(--font-display); font-size: 20px; }
+.hub-card span { font-size: 15px; opacity: 0.92; }
+.hub-card:hover { filter: brightness(1.08); }
+
+/* Search results */
+.search-results { display: grid; gap: 28px; margin-top: 28px; }
+.result-group { display: grid; gap: 12px; }
+.result-group h3 { font-size: 22px; }
+.result-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .result-list { grid-template-columns: 1fr; } }
+.result-list .dir-card { background: var(--surface); }
+
+/* Profile and suggestions */
+.profile-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 32px; align-items: start; }
+@media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+.profile-form { display: grid; gap: 26px; }
+.profile-form fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+.profile-form legend { padding: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.profile-form .hint { font-size: 15px; color: var(--muted); margin-top: -4px; }
+.pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.add-row { display: flex; gap: 8px; max-width: 440px; }
+.add-row .btn { padding: 10px 18px; flex: none; }
+.meter { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--c-vid); border-radius: 4px; transition: width 0.3s ease; }
+@media (prefers-reduced-motion: reduce) { .meter span { transition: none; } }
+.suggestions-panel {
+  position: sticky; top: 84px; display: grid; gap: 14px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px;
+}
+@media (max-width: 900px) { .suggestions-panel { position: static; } }
+.suggestions-panel h3 { font-size: 26px; }
+.rec { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: start; background: var(--surface); border: 1.5px solid var(--line); border-left: 5px solid var(--dir); border-radius: 14px; padding: 14px; }
+.rec h4 { margin: 0; font-family: var(--font-display); font-size: 18px; line-height: 1.25; }
+.rec p { font-size: 15px; }
+.rec .reason { font-weight: 600; color: var(--dir); }
+:root[data-theme="dark"] .rec .reason { color: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rec .reason { color: var(--ink); } }
+.rec .star { margin: -6px -6px 0 0; }
+
+/* Personality test */
+.test-card { max-width: 760px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 4vw, 36px); display: grid; gap: 18px; }
+.progress { display: grid; gap: 6px; }
+.progress .meter span { background: var(--c-ung); }
+.test-card h3 { font-size: clamp(24px, 3vw, 30px); }
+.answers { display: grid; gap: 10px; }
+.answer {
+  text-align: left; padding: 16px 18px; border-radius: 14px; border: 1.5px solid var(--line);
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 17px; cursor: pointer;
+}
+.answer:hover { border-color: var(--c-ung); background: color-mix(in srgb, var(--c-ung) 8%, var(--paper)); }
+.persona-card { border-radius: var(--radius); padding: 24px; color: #FFFFFF; display: grid; gap: 6px; }
+.persona-card small { font-size: 14px; font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.06em; }
+.persona-card b { font-family: var(--font-display); font-size: 34px; line-height: 1.1; }
+.trait { display: grid; grid-template-columns: 110px minmax(0, 1fr) 44px; gap: 12px; align-items: center; font-size: 15px; }
+.trait .meter { height: 10px; border-radius: 5px; }
+.trait .meter span { border-radius: 5px; }
+.trait span:last-child { text-align: right; color: var(--muted); }
+.match {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 16px; border-radius: 14px; border: 0; color: #FFFFFF; font: inherit; cursor: pointer; text-align: left;
+}
+.match b { font-family: var(--font-display); font-size: 18px; }
+.match span { font-weight: 600; white-space: nowrap; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* Jobs */
+.switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; }
+.switch button {
+  min-height: 60px; padding: 8px 12px; border-radius: 16px; border: 2px solid var(--line);
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 16px; line-height: 1.25; cursor: pointer;
+}
+.switch button[aria-selected="true"] { border-color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, var(--surface)); }
+.jobs-tools { display: grid; gap: 16px; margin-bottom: 24px; }
+.job-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 760px) { .job-list { grid-template-columns: 1fr; } }
+.job { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.job summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; padding: 16px 56px 16px 16px; }
+.job summary::-webkit-details-marker { display: none; }
+.job .badge { background: var(--job); width: 40px; height: 40px; font-size: 17px; }
+.job h4 { margin: 0; font-family: var(--font-display); font-size: 18px; line-height: 1.25; }
+.job .cat { font-size: 14px; color: var(--muted); }
+.job p { font-size: 15.5px; }
+.job .more { font-size: 14px; font-weight: 600; color: var(--action); margin-top: 4px; }
+.job[open] .more { display: none; }
+.job-details { padding: 0 16px 18px 70px; display: grid; gap: 6px; }
+@media (max-width: 480px) { .job-details { padding-left: 16px; } }
+.job-details b { color: var(--job); }
+:root[data-theme="dark"] .job-details b { color: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .job-details b { color: var(--ink); } }
+.job .star { position: absolute; top: 8px; right: 8px; }
+.go-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.go-chip {
+  padding: 6px 14px; border-radius: 999px; border: 0; background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.go-chip:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.placement { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 8px; align-content: start; }
+.placement-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.placement h4 { margin: 0; font-family: var(--font-display); font-size: 18px; }
+.kind { padding: 2px 10px; border-radius: 999px; color: #FFFFFF; font-size: 13px; font-weight: 600; flex: none; }
+.intro-card { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 8px; }
+.intro-card h4 { margin: 0; font-family: var(--font-display); font-size: 20px; }
+.jobs-footer { margin-top: 24px; display: grid; gap: 10px; }
+
+/* AI chat */
+.chat-tabs { margin-bottom: 16px; }
+.chat {
+  max-width: 820px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+  display: grid; grid-template-rows: minmax(0, 1fr) auto; height: min(640px, 78vh); overflow: hidden;
+}
+.chat-log { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; }
+.bubble.assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: #FFFFFF; border-bottom-right-radius: 6px; }
+.bubble.typing { color: var(--muted); }
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-suggestions button {
+  padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--accent); background: transparent;
+  color: var(--ink); font: inherit; font-size: 15px; cursor: pointer; text-align: left;
+}
+.chat-suggestions button:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.chat-error { color: var(--c-and); font-size: 15px; font-weight: 600; }
+.chat-form { display: flex; gap: 10px; padding: 12px; border: 0; border-top: 1px solid var(--line); background: var(--surface); border-radius: 0; }
+.chat-form textarea { min-height: 48px; max-height: 140px; resize: none; padding: 12px 14px; border-radius: 14px; }
+.chat-form .btn { align-self: end; background: var(--accent); color: #FFFFFF; }
+.chat-form .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-note { max-width: 820px; margin-top: 10px; font-size: 14px; color: var(--muted); }
+
+/* Glossary */
+.glossary-cat { display: grid; gap: 14px; margin-top: 32px; }
+.glossary-cat h3 { font-size: 24px; }
+.term .aka { font-size: 14px; color: var(--muted); }
+#ordbog .terms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1000px) { #ordbog .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { #ordbog .terms { grid-template-columns: 1fr; } }
+
+/* Favourites */
+.fav-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 760px) { .fav-list { grid-template-columns: 1fr; } }
+.fav-list .program { background: var(--surface); }
+
+/* Feature cards are links to the part of the page that does it */
+a.feature { text-decoration: none; color: inherit; border-radius: var(--radius); padding: 14px; margin: -14px; }
+a.feature:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+a.feature h3::after { content: " →"; color: var(--muted); }
 </style>
 </head>
 <body>
-  <p>Fremtidskompasset er flyttet. <a href="https://fremtidskompasset.expo.app/">Åbn appen her</a>.</p>
+
+<header class="site-header">
+  <nav class="wrap nav" aria-label="Hovedmenu">
+    <a class="brand" href="#top">
+      <svg class="brand-mark rose" viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="78" stroke="currentColor" stroke-width="5" fill="none"/><polygon points="198.1,101.9 150,150 150.0,137.3" fill="var(--muted)"/><polygon points="198.1,101.9 150,150 162.7,150.0" fill="var(--muted)" opacity=".5"/><polygon points="198.1,198.1 150,150 162.7,150.0" fill="var(--muted)"/><polygon points="198.1,198.1 150,150 150.0,162.7" fill="var(--muted)" opacity=".5"/><polygon points="101.9,198.1 150,150 150.0,162.7" fill="var(--muted)"/><polygon points="101.9,198.1 150,150 137.3,150.0" fill="var(--muted)" opacity=".5"/><polygon points="101.9,101.9 150,150 137.3,150.0" fill="var(--muted)"/><polygon points="101.9,101.9 150,150 150.0,137.3" fill="var(--muted)" opacity=".5"/><polygon points="150.0,4.0 150,150 139.0,139.0" fill="var(--c-ung)"/><polygon points="150.0,4.0 150,150 161.0,139.0" fill="var(--c-ung)" opacity=".5"/><polygon points="296.0,150.0 150,150 161.0,139.0" fill="var(--c-vid)"/><polygon points="296.0,150.0 150,150 161.0,161.0" fill="var(--c-vid)" opacity=".5"/><polygon points="150.0,296.0 150,150 161.0,161.0" fill="var(--c-eft)"/><polygon points="150.0,296.0 150,150 139.0,161.0" fill="var(--c-eft)" opacity=".5"/><polygon points="4.0,150.0 150,150 139.0,161.0" fill="var(--c-and)"/><polygon points="4.0,150.0 150,150 139.0,139.0" fill="var(--c-and)" opacity=".5"/><circle cx="150" cy="150" r="5" fill="currentColor"/></svg>
+      <span>Fremtidskompasset</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#udforsk">Udforsk</a></li>
+      <li><a href="#soeg">Søg</a></li>
+      <li><a href="#forslag">Hvad passer til dig?</a></li>
+      <li><a href="#jobs">Jobs</a></li>
+      <li><a href="#ordbog">Ordbog</a></li>
+      <li><a href="#favoritter">Favoritter<span class="count" id="fav-count"></span></a></li>
+    </ul>
+    <a class="btn btn-primary" href="#ai">Find min fremtid</a>
+  </nav>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Uddannelsesvejledning i lommen</p>
+        <h1>Find den vej, der <em>passer til dig</em></h1>
+        <p class="lead">Fremtidskompasset samler ungdomsuddannelser, videregående uddannelser og efteruddannelse ét sted, sammen med job, praktik og lærepladser. Se krav og snit, få forslag, der passer til dig, og spørg AI-guiden om det, du er i tvivl om.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#udforsk">Udforsk uddannelser</a>
+          <a class="btn btn-ghost" href="#ai">Spørg AI-guiden</a>
+        </div>
+        <p class="hero-note">Gratis · Ingen konto · Din profil og dine favoritter bliver i din browser</p>
+      </div>
+
+      <div class="hero-phone" aria-label="Genveje som på appens forside">
+        <div class="phone">
+          <div class="screen">
+            <div class="island"></div>
+            <p class="app-title">Fremtidskompasset</p>
+            <div class="app-body">
+              <p class="app-question">Hvad leder du efter?</p>
+              <div class="app-grid">
+                <a class="app-btn" href="#udforsk" data-level="ungdomsuddannelse" style="background: var(--c-ung)"><b>Ungdomsuddannelse</b><small>Gymnasium, erhvervsuddannelse, EUX eller EPX</small></a>
+                <a class="app-btn" href="#udforsk" data-level="videregaaende" style="background: var(--c-vid)"><b>Videregående uddannelse</b><small>Universitet, professionshøjskole eller erhvervsakademi</small></a>
+                <a class="app-btn" href="#udforsk" data-level="efteruddannelse" style="background: var(--c-eft)"><b>Efteruddannelse</b><small>Kurser og uddannelse ved siden af dit job</small></a>
+                <a class="app-btn" href="#udforsk" data-level="andet" style="background: var(--c-and)"><b>Andet</b><small>Noget helt fjerde, eller du er ikke sikker endnu</small></a>
+                <a class="app-btn app-wide" href="#ai" data-chat="guide" style="background: var(--c-ai)"><b>Find min fremtid</b><small>Spørg AI-guiden om fag, krav og snit</small></a>
+              </div>
+            </div>
+            <div class="app-tabs" aria-hidden="true">
+              <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg>Hjem</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Søg</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Favoritter</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Jobs</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profil</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="udforsk">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Udforsk</p>
+        <h2>Kig rundt i uddannelserne</h2>
+        <p>Vælg, hvor du er nu, og se de retninger, du kan gå: hvad det kræver at komme ind, hvilke uddannelser du kan vælge, og hvilke krav og snit de har.</p>
+      </div>
+      <div class="level-tabs" role="tablist" aria-label="Vælg niveau" id="level-tabs"></div>
+      <div class="explorer">
+        <div class="dir-list" id="dir-list"></div>
+        <div class="detail" id="detail" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="soeg" class="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Søg</p>
+        <h2>Find en uddannelse eller et job</h2>
+        <p>Søg på navn, fag eller emne, fx “læge”, “tømrer” eller “matematik”.</p>
+      </div>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="search-input" type="search" placeholder="Søg efter uddannelse, job eller fag" aria-label="Søg efter uddannelse, job eller fag" autocomplete="off">
+      </div>
+      <div class="search-results" id="search-results" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="forslag">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Hvad passer til dig?</p>
+        <h2>Fortæl lidt om dig selv, og få 5 forslag</h2>
+        <p>Vælg dine interesser og yndlingsfag, og skriv dit drømmejob. Forslagene ændrer sig med det samme, når du ændrer din profil.</p>
+      </div>
+      <div class="profile-grid">
+        <form class="profile-form" id="profile-form" novalidate>
+          <div class="stack">
+            <div class="meter" aria-hidden="true"><span id="profile-meter"></span></div>
+            <p class="small muted" id="profile-percent"></p>
+          </div>
+          <fieldset>
+            <legend>Om dig</legend>
+            <div class="row-2">
+              <div class="field"><label for="p-name">Navn</label><input id="p-name" name="name" autocomplete="given-name"></div>
+              <div class="field"><label for="p-age">Alder</label><input id="p-age" name="age" inputmode="numeric" autocomplete="off"></div>
+            </div>
+          </fieldset>
+          <fieldset><legend>Hvad laver du nu?</legend><div class="pill-group" id="p-status"></div></fieldset>
+          <fieldset><legend>Hvor bor du?</legend><div class="pill-group" id="p-region"></div></fieldset>
+          <fieldset>
+            <legend>Interesser</legend>
+            <p class="hint">Vælg alt det, du synes er spændende</p>
+            <div class="pill-group" id="p-interests"></div>
+            <div class="add-row">
+              <input id="p-own-interest" placeholder="Tilføj din egen interesse" aria-label="Tilføj din egen interesse">
+              <button class="btn btn-ghost" type="button" id="p-add-interest">Tilføj</button>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Yndlingsfag</legend>
+            <p class="hint">De fag, du er god til eller kan lide</p>
+            <div class="pill-group" id="p-subjects"></div>
+          </fieldset>
+          <fieldset>
+            <legend>Drømmejob</legend>
+            <p class="hint">Det er helt okay, hvis du ikke ved det endnu</p>
+            <input id="p-dream" placeholder="Fx dyrlæge, spiludvikler eller tømrer" aria-label="Drømmejob">
+          </fieldset>
+          <fieldset>
+            <legend>Lidt mere om mig</legend>
+            <p class="hint">Hvad laver du i din fritid? Hvad er du stolt af?</p>
+            <textarea id="p-about" placeholder="Skriv lidt om dig selv" aria-label="Lidt mere om mig"></textarea>
+          </fieldset>
+        </form>
+
+        <aside class="suggestions-panel" aria-labelledby="rec-title">
+          <h3 id="rec-title">Forslag til dig</h3>
+          <p class="small muted">Uddannelser og job, der passer til det, du har valgt. Forslagene ændrer sig, når du ændrer din profil.</p>
+          <div class="stack" id="recommendations" aria-live="polite"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="test" class="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Personlighedstest</p>
+        <h2>Hvem er du, og hvad passer til dig?</h2>
+        <p>Svar på 12 spørgsmål og se, hvilken persona du er, og hvilke uddannelser der passer til dig.</p>
+      </div>
+      <div class="test-card" id="test-card" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="jobs">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Jobs</p>
+        <h2>Job, praktik og lærepladser</h2>
+        <p>Se, hvad forskellige job går ud på, og hvordan du bliver det. Eller find ud af, hvordan du får en læreplads eller praktik.</p>
+      </div>
+      <div class="jobs-tools">
+        <div class="switch" role="tablist" aria-label="Jobs eller praktik og lærepladser" id="jobs-switch">
+          <button type="button" role="tab" data-jobs-tab="jobs" aria-selected="true">Jobs</button>
+          <button type="button" role="tab" data-jobs-tab="placements" aria-selected="false">Praktik &amp;<br>lærepladser</button>
+        </div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="jobs-input" type="search" autocomplete="off">
+        </div>
+        <p class="small muted" id="jobs-count"></p>
+      </div>
+      <div class="job-list" id="job-list"></div>
+      <div class="jobs-footer" id="jobs-footer"></div>
+    </div>
+  </section>
+
+  <section id="ai" class="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Find min fremtid</p>
+        <h2>Spørg AI-guiden</h2>
+        <p>Spørg om, hvad en uddannelse kræver af fag og snit, hvilken linje du skal vælge, eller tal med AI-vejlederen om, hvad der kunne passe til dig.</p>
+      </div>
+      <div class="switch chat-tabs" role="tablist" aria-label="Vælg AI" id="chat-tabs">
+        <button type="button" role="tab" data-chat-tab="guide" aria-selected="true">Find min fremtid</button>
+        <button type="button" role="tab" data-chat-tab="persona" aria-selected="false">AI-vejleder</button>
+      </div>
+      <div class="chat" id="chat">
+        <div class="chat-log" id="chat-log" aria-live="polite"></div>
+        <form class="chat-form" id="chat-form">
+          <textarea id="chat-input" rows="1" placeholder="Skriv en besked …" aria-label="Skriv en besked" maxlength="2000"></textarea>
+          <button class="btn" type="submit" id="chat-send">Send</button>
+        </form>
+      </div>
+      <p class="chat-note">Dine beskeder bliver sendt til en AI-tjeneste for at lave et svar, og AI'en kan tage fejl. Skriv ikke personlige oplysninger som CPR-nummer, og tal med en vejleder, før du træffer dit valg.</p>
+    </div>
+  </section>
+
+  <section id="ordbog">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Ordbog</p>
+        <h2>Forstå ordene, før du vælger</h2>
+        <p>Hvad betyder merit, A-niveau, kvote 2 og SU? Her er de ord, der bruges om uddannelse, forklaret i et sprog, man forstår.</p>
+      </div>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="glossary-input" type="search" placeholder="Søg i ordbogen, fx SU eller merit" aria-label="Søg i ordbogen" autocomplete="off">
+      </div>
+      <div id="glossary" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="favoritter" class="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Favoritter</p>
+        <h2>Dine favoritter</h2>
+        <p>Tryk på stjernen ved en uddannelse eller et job, så bliver den gemt her i din browser.</p>
+      </div>
+      <div id="favorites"></div>
+    </div>
+  </section>
+
+  <section id="funktioner">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Det hele ét sted</p>
+        <h2>Alt det, du skal bruge for at vælge uddannelse og job</h2>
+        <p>Fremtidskompasset samler information, der ellers ligger spredt på mange hjemmesider, og gør den personlig. Tryk på en funktion for at bruge den.</p>
+      </div>
+      <div class="features">
+        <a class="feature" href="#udforsk">
+          <div class="feature-icon" style="background: var(--c-ung)"><svg class="rose" viewBox="0 0 300 300" aria-hidden="true" style="color:#fff"><circle cx="150" cy="150" r="78" stroke="currentColor" stroke-width="5" fill="none"/><polygon points="198.1,101.9 150,150 150.0,137.3" fill="currentColor"/><polygon points="198.1,101.9 150,150 162.7,150.0" fill="currentColor" opacity=".5"/><polygon points="198.1,198.1 150,150 162.7,150.0" fill="currentColor"/><polygon points="198.1,198.1 150,150 150.0,162.7" fill="currentColor" opacity=".5"/><polygon points="101.9,198.1 150,150 150.0,162.7" fill="currentColor"/><polygon points="101.9,198.1 150,150 137.3,150.0" fill="currentColor" opacity=".5"/><polygon points="101.9,101.9 150,150 137.3,150.0" fill="currentColor"/><polygon points="101.9,101.9 150,150 150.0,137.3" fill="currentColor" opacity=".5"/><polygon points="150.0,4.0 150,150 139.0,139.0" fill="currentColor"/><polygon points="150.0,4.0 150,150 161.0,139.0" fill="currentColor" opacity=".5"/><polygon points="296.0,150.0 150,150 161.0,139.0" fill="currentColor"/><polygon points="296.0,150.0 150,150 161.0,161.0" fill="currentColor" opacity=".5"/><polygon points="150.0,296.0 150,150 161.0,161.0" fill="currentColor"/><polygon points="150.0,296.0 150,150 139.0,161.0" fill="currentColor" opacity=".5"/><polygon points="4.0,150.0 150,150 139.0,161.0" fill="currentColor"/><polygon points="4.0,150.0 150,150 139.0,139.0" fill="currentColor" opacity=".5"/><circle cx="150" cy="150" r="5" fill="currentColor"/></svg></div>
+          <h3>Kompasset</h3>
+          <p>Se retningerne som et kompas med fire verdenshjørner, og tryk dig ind på den, der fanger dig.</p>
+        </a>
+        <a class="feature" href="#soeg">
+          <div class="feature-icon" style="background: var(--c-vid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
+          <h3>Søg</h3>
+          <p>Find uddannelser og job på navn, fag eller emne, fx “læge”, “tømrer” eller “matematik”.</p>
+        </a>
+        <a class="feature" href="#favoritter">
+          <div class="feature-icon" style="background: var(--c-and)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></div>
+          <h3>Favoritter</h3>
+          <p>Tryk på stjernen ved en uddannelse eller et job, og saml dem, du vil kigge nærmere på.</p>
+        </a>
+        <a class="feature" href="#jobs">
+          <div class="feature-icon" style="background: var(--c-ung)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></div>
+          <h3>Jobs</h3>
+          <p>Søg i job som kok, sygeplejerske og programmør, og se hvilken uddannelse der fører dertil.</p>
+        </a>
+        <a class="feature" href="#jobs" data-jobs-open="placements">
+          <div class="feature-icon" style="background: var(--c-eft)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 20h20"/><path d="M5 20V9l7-5 7 5v11"/><path d="M10 20v-6h4v6"/></svg></div>
+          <h3>Praktik &amp; lærepladser</h3>
+          <p>Forstå forskellen på læreplads og praktik, find fag med læreplads, og gå videre til Lærepladsen.dk.</p>
+        </a>
+        <a class="feature" href="#forslag">
+          <div class="feature-icon" style="background: var(--c-eft)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+          <h3>Profil og forslag</h3>
+          <p>Fortæl om dine interesser, yndlingsfag og drømmejob, og få 5 forslag med en begrundelse.</p>
+        </a>
+        <a class="feature" href="#ordbog">
+          <div class="feature-icon" style="background: var(--c-vid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6"/></svg></div>
+          <h3>Ordbog</h3>
+          <p>Hvad er merit, A-niveau, kvote 2 og SU? 28 ord om uddannelse forklaret i et sprog, man forstår.</p>
+        </a>
+        <a class="feature" href="#ai">
+          <div class="feature-icon" style="background: var(--c-ai)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 5h16v11H9l-5 4z"/></svg></div>
+          <h3>AI-vejleder</h3>
+          <p>Spørg om krav, snit og studieretninger, eller tal om, hvad der kunne passe til dig.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="saadan" class="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Sådan virker det</p>
+        <h2>Fra “ved ikke” til en plan på tre trin</h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Fortæl lidt om dig selv</h3>
+          <p>Udfyld din profil med interesser, yndlingsfag, drømmejob og hvad du laver nu. Eller tag personlighedstesten. Det tager et par minutter.</p>
+        </li>
+        <li>
+          <h3>Få dine forslag</h3>
+          <p>Du får 5 uddannelser og job, der passer til dig, og hvorfor. Forslagene ændrer sig, når du ændrer profilen.</p>
+        </li>
+        <li>
+          <h3>Gå i dybden</h3>
+          <p>Se krav, snit og muligheder, gem dine favoritter, og spørg AI-vejlederen om det, du er i tvivl om.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="skoler" class="schools">
+    <div class="wrap schools-grid">
+      <div class="section-head" style="margin-bottom:0">
+        <p class="eyebrow">For skoler og vejledere</p>
+        <h2>Et redskab mellem vejledningssamtalerne</h2>
+        <p>Fremtidskompasset kan bruges i folkeskolen, på ungdomsuddannelserne og i kommunens vejledning, så eleverne kommer forberedt til samtalen.</p>
+        <a class="btn btn-primary" href="#kontakt">Hør om et pilotforløb</a>
+      </div>
+      <ul class="checklist">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><span>Eleverne kan selv undersøge retninger, krav og snit i deres eget tempo.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><span>Profil og favoritter giver et konkret udgangspunkt for vejledningssamtalen.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><span>Jobs og lærepladser viser, hvad uddannelsen kan føre til, og hvordan man kommer i lære.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><span>Ordbogen hjælper elever og forældre med de ord, systemet bruger.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><span>Elevernes profil bliver i deres egen browser og deles ikke med skolen.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="spoergsmaal">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Spørgsmål og svar</p>
+        <h2>Det bliver vi tit spurgt om</h2>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>Er hjemmesiden det samme som appen?</summary>
+          <p>Ja. Hjemmesiden kan det samme som appen: udforske uddannelser med krav og snit, søge, få forslag ud fra din profil, tage personlighedstesten, se job og lærepladser, bruge ordbogen, gemme favoritter og spørge AI-guiden.</p>
+        </details>
+        <details>
+          <summary>Koster det noget?</summary>
+          <p>Nej, det er gratis for elever og studerende. Skoler og kommuner, der vil bruge Fremtidskompasset i vejledningen, kan kontakte os.</p>
+        </details>
+        <details>
+          <summary>Hvor bliver mine oplysninger gemt?</summary>
+          <p>Din profil og dine favoritter bliver kun gemt i din egen browser på den enhed, du bruger. Vi har ingen konto og ingen server, hvor de ligger. Rydder du browserens data, forsvinder de.</p>
+        </details>
+        <details>
+          <summary>Hvor kommer oplysningerne om uddannelserne fra?</summary>
+          <p>Teksterne er skrevet ud fra offentlige oplysninger om uddannelserne. Snit og krav ændrer sig fra år til år, så tjek altid de aktuelle tal hos uddannelsesstedet eller på optagelse.dk, før du søger.</p>
+        </details>
+        <details>
+          <summary>Kan jeg få hjælp til at finde en læreplads?</summary>
+          <p>Under <a href="#jobs" data-jobs-open="placements">Jobs</a> finder du fanen “Praktik &amp; lærepladser”, der forklarer forskellen på læreplads og praktik og viser fag, hvor du skal have en læreplads. Ledige lærepladser søger du på <a href="https://www.laerepladsen.dk/">Lærepladsen.dk</a>, og finder du ingen, kan du på mange fag komme i skoleoplæring.</p>
+        </details>
+        <details>
+          <summary>Kan AI-vejlederen tage fejl?</summary>
+          <p>Ja. AI-vejlederen er god til at give overblik og idéer, men den kan tage fejl. Brug den som et sted at starte, og tal med en studievejleder eller UU-vejleder, før du træffer dit valg.</p>
+        </details>
+        <details>
+          <summary>Kommer der også en app?</summary>
+          <p>Ja, appen er på vej til App Store og Google Play. Skriv til os, hvis du vil have besked, når den er ude.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="hent" style="padding-top:0">
+    <div class="wrap">
+      <div class="download-card">
+        <div>
+          <h2>Appen er på vej</h2>
+          <p>Alt det, du kan her på siden, kommer også som app til iPhone og Android. Indtil da kan du bruge hjemmesiden, også på din telefon.</p>
+        </div>
+        <div class="stores">
+          <div class="store"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg><span><small>Kommer snart i</small><b>App Store</b></span></div>
+          <div class="store"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2.5v19l10-9.5zM15.3 13.2 6.6 21.6l11-6.3zM17.7 9 6.6 2.4l8.7 8.4zM18.8 9.7l-2.6 2.3 2.6 2.4 2.9-1.6c.8-.5.8-1.1 0-1.6z"/></svg><span><small>Kommer snart på</small><b>Google Play</b></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="kontakt" class="how">
+    <div class="wrap contact-grid">
+      <div class="section-head" style="margin-bottom:0">
+        <p class="eyebrow">Kontakt</p>
+        <h2>Skriv til os</h2>
+        <p>Har du et spørgsmål, en idé eller fundet en fejl i en uddannelse? Er du vejleder og vil prøve Fremtidskompasset med en klasse? Så hører vi gerne fra dig.</p>
+      </div>
+      <form id="contact-form" novalidate>
+        <div class="row-2">
+          <div class="field">
+            <label for="name">Navn</label>
+            <input id="name" name="name" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="role">Jeg er</label>
+          <select id="role" name="role">
+            <option>Elev eller studerende</option>
+            <option>Forælder</option>
+            <option>Lærer eller vejleder</option>
+            <option>Fra en kommune eller skole</option>
+            <option>Andet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="message">Besked</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Send besked</button>
+        <p class="form-status" id="form-status" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="privatliv" class="privacy">
+    <div class="wrap privacy-text">
+      <h2>Privatliv</h2>
+      <p>Din profil og dine favoritter bliver kun gemt i din egen browser på den enhed, du bruger. Rydder du browserens data, forsvinder de også.</p>
+      <p>Når du skriver med AI-guiden eller AI-vejlederen, bliver dine beskeder sendt til en AI-tjeneste for at lave et svar. Har du taget personlighedstesten og vælger at snakke om resultatet, bliver resultatet sendt med. Skriv ikke personlige oplysninger som CPR-nummer i chatten.</p>
+      <p>Hjemmesiden bruger ingen cookies til sporing.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <a class="brand" href="#top">
+      <svg class="brand-mark rose" viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="78" stroke="currentColor" stroke-width="5" fill="none"/><polygon points="198.1,101.9 150,150 150.0,137.3" fill="var(--muted)"/><polygon points="198.1,101.9 150,150 162.7,150.0" fill="var(--muted)" opacity=".5"/><polygon points="198.1,198.1 150,150 162.7,150.0" fill="var(--muted)"/><polygon points="198.1,198.1 150,150 150.0,162.7" fill="var(--muted)" opacity=".5"/><polygon points="101.9,198.1 150,150 150.0,162.7" fill="var(--muted)"/><polygon points="101.9,198.1 150,150 137.3,150.0" fill="var(--muted)" opacity=".5"/><polygon points="101.9,101.9 150,150 137.3,150.0" fill="var(--muted)"/><polygon points="101.9,101.9 150,150 150.0,137.3" fill="var(--muted)" opacity=".5"/><polygon points="150.0,4.0 150,150 139.0,139.0" fill="var(--c-ung)"/><polygon points="150.0,4.0 150,150 161.0,139.0" fill="var(--c-ung)" opacity=".5"/><polygon points="296.0,150.0 150,150 161.0,139.0" fill="var(--c-vid)"/><polygon points="296.0,150.0 150,150 161.0,161.0" fill="var(--c-vid)" opacity=".5"/><polygon points="150.0,296.0 150,150 161.0,161.0" fill="var(--c-eft)"/><polygon points="150.0,296.0 150,150 139.0,161.0" fill="var(--c-eft)" opacity=".5"/><polygon points="4.0,150.0 150,150 139.0,161.0" fill="var(--c-and)"/><polygon points="4.0,150.0 150,150 139.0,139.0" fill="var(--c-and)" opacity=".5"/><circle cx="150" cy="150" r="5" fill="currentColor"/></svg>
+      <span>Fremtidskompasset</span>
+    </a>
+    <ul class="footer-links">
+      <li><a href="#funktioner">Funktioner</a></li>
+      <li><a href="#skoler">For skoler</a></li>
+      <li><a href="#spoergsmaal">Spørgsmål</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+      <li><a href="#privatliv">Privatliv</a></li>
+    </ul>
+    <p>© 2026 Fremtidskompasset</p>
+  </div>
+</footer>
+
+<script src="engine.js"></script>
+<script src="site.js"></script>
 </body>
 </html>
