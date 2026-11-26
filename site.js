@@ -363,12 +363,12 @@
   }
 
   function renderCompleteness() {
-    // Like the app, but without the profile photo, which the website doesn't have.
+    // The same ten things as in the app.
     const filled = [
-      profile.name.trim(), profile.age.trim(), profile.status, profile.region,
-      profile.interests.length > 0, profile.favoriteSubjects.length > 0, profile.dreamJob.trim(), profile.about.trim(),
+      profile.name.trim(), profile.age.trim(), profile.photo, profile.status, profile.region,
+      profile.interests.length > 0, profile.favoriteSubjects.length > 0, profile.dreamJob.trim(), profile.about.trim(), profile.cv,
     ].filter(Boolean).length;
-    const percent = Math.round((filled / 8) * 100);
+    const percent = Math.round((filled / 10) * 100);
     $('profile-meter').style.width = `${percent}%`;
     $('profile-percent').textContent = percent === 100 ? 'Din profil er helt udfyldt 🎉' : `Din profil er ${percent}% udfyldt`;
   }
@@ -413,8 +413,167 @@
   const textFields = { 'p-name': 'name', 'p-age': 'age', 'p-dream': 'dreamJob', 'p-about': 'about' };
   Object.entries(textFields).forEach(([id, field]) => {
     $(id).value = profile[field] || '';
-    $(id).addEventListener('input', () => updateProfile({ [field]: $(id).value }));
+    $(id).addEventListener('input', () => {
+      updateProfile({ [field]: $(id).value });
+      if (field === 'name') renderPhoto();
+    });
   });
+
+  // Profile photo: made small and square, so it fits in the browser's storage.
+  function renderPhoto() {
+    const button = $('p-photo-btn');
+    const initials = profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
+    button.style.backgroundImage = profile.photo ? `url("${profile.photo}")` : '';
+    $('p-initials').textContent = profile.photo ? '' : initials || '+';
+    $('p-photo-pick').textContent = profile.photo ? 'Skift billede' : 'Vælg profilbillede';
+    $('p-photo-remove').hidden = !profile.photo;
+  }
+
+  function shrinkPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const size = 320;
+        const side = Math.min(img.naturalWidth, img.naturalHeight);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.getContext('2d').drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('bad-image'));
+      };
+      img.src = url;
+    });
+  }
+
+  const pickPhoto = () => $('p-photo-input').click();
+  $('p-photo-btn').addEventListener('click', pickPhoto);
+  $('p-photo-pick').addEventListener('click', pickPhoto);
+  $('p-photo-remove').addEventListener('click', () => {
+    updateProfile({ photo: undefined });
+    renderPhoto();
+  });
+  $('p-photo-input').addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      updateProfile({ photo: await shrinkPhoto(file) });
+    } catch {
+      alert('Billedet kunne ikke bruges. Prøv med et andet billede.');
+    }
+    renderPhoto();
+  });
+  renderPhoto();
+
+  // CV: the file itself is kept in the browser's database (IndexedDB), which has room for
+  // bigger files than localStorage. The profile only remembers its name and size.
+  const MaxCvBytes = 10 * 1024 * 1024;
+  const cvDb = {
+    open() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('fremtidskompasset', 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('files');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    },
+    async run(mode, action) {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('files', mode);
+        const request = action(tx.objectStore('files'));
+        tx.oncomplete = () => resolve(request.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    },
+    get: () => cvDb.run('readonly', (s) => s.get('cv')),
+    put: (file) => cvDb.run('readwrite', (s) => s.put(file, 'cv')),
+    remove: () => cvDb.run('readwrite', (s) => s.delete('cv')),
+  };
+  let cvError = '';
+
+  function formatSize(bytes) {
+    return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
+  }
+
+  function renderCv() {
+    const cv = profile.cv;
+    const error = cvError ? `<p class="cv-error" role="alert">${esc(cvError)}</p>` : '';
+    $('p-cv').innerHTML = cv
+      ? `<div class="cv-file"><span class="cv-icon" aria-hidden="true">📄</span><div class="cv-info">
+          <span class="cv-name">${esc(cv.name)}</span>
+          <span class="small muted">${formatSize(cv.size)}${cv.savedAt ? ` · gemt ${new Date(cv.savedAt).toLocaleDateString('da-DK')}` : ''}</span>
+          <div class="avatar-actions"><button class="link-btn" type="button" data-cv="open">Vis</button><button class="link-btn" type="button" data-cv="pick">Skift</button><button class="link-btn muted" type="button" data-cv="remove">Fjern</button></div>
+        </div></div>${error}`
+      : `<button class="cv-drop" type="button" data-cv="pick"><span class="cv-icon" aria-hidden="true">📄</span><b>Upload dit CV</b><span class="small muted">PDF, Word eller billede, højst 10 MB. Du kan også trække filen herhen.</span></button>${error}`;
+  }
+
+  async function saveCv(file) {
+    cvError = '';
+    if (file.size > MaxCvBytes) {
+      cvError = 'Filen er for stor. Vælg en fil på højst 10 MB.';
+      renderCv();
+      return;
+    }
+    try {
+      await cvDb.put(file);
+      updateProfile({ cv: { name: file.name, size: file.size, type: file.type, savedAt: Date.now() } });
+    } catch {
+      cvError = 'CV’et kunne ikke gemmes i din browser. Prøv igen, eller prøv en anden browser.';
+    }
+    renderCv();
+  }
+
+  async function openCv() {
+    const win = window.open('', '_blank');
+    try {
+      const file = await cvDb.get();
+      if (!file) throw new Error('missing');
+      const url = URL.createObjectURL(file);
+      if (win) win.location.href = url;
+      else window.location.href = url;
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch {
+      if (win) win.close();
+      cvError = 'CV’et findes ikke længere i denne browser. Upload det igen.';
+      updateProfile({ cv: undefined });
+      renderCv();
+    }
+  }
+
+  $('p-cv').addEventListener('click', async (event) => {
+    const action = event.target.closest('[data-cv]')?.dataset.cv;
+    if (action === 'pick') $('p-cv-input').click();
+    if (action === 'open') openCv();
+    if (action === 'remove') {
+      cvError = '';
+      try { await cvDb.remove(); } catch { /* Already gone. */ }
+      updateProfile({ cv: undefined });
+      renderCv();
+    }
+  });
+  $('p-cv-input').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    event.target.value = '';
+    if (file) saveCv(file);
+  });
+  $('p-cv').addEventListener('dragover', (event) => {
+    event.preventDefault();
+    event.target.closest('.cv-drop')?.classList.add('drag');
+  });
+  $('p-cv').addEventListener('dragleave', (event) => event.target.closest('.cv-drop')?.classList.remove('drag'));
+  $('p-cv').addEventListener('drop', (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) saveCv(file);
+  });
+  renderCv();
 
   function addOwnInterest() {
     const input = $('p-own-interest');
@@ -519,7 +678,6 @@
       <div class="placement-head"><h4>${esc(placement.name)}</h4><span class="kind" style="background:${apprenticeship ? '#347E83' : '#3F5F9E'}">${esc(placement.kind)}</span></div>
       <p>${esc(placement.description)}</p>
       <p class="small muted">Fx ${esc(placement.examples.join(', '))}</p>
-      ${apprenticeship ? `<div class="go-chips"><a class="go-chip" href="${F.JobLinks.laerepladsen}" target="_blank" rel="noopener">Find ledige lærepladser ↗</a></div>` : ''}
     </article>`;
   }
 
@@ -546,12 +704,8 @@
     const list = isJobs ? items.map(jobCard) : items.map(placementCard);
     if (!isJobs && !hasQuery) list.unshift(PlacementIntro);
     $('job-list').innerHTML = hasQuery && items.length === 0
-      ? `<div class="empty" style="grid-column:1/-1"><b>Ingen resultater for “${esc(jobsState.query.trim())}”</b><p class="muted">Prøv et andet ord, eller se alle ledige stillinger via linket nedenfor.</p></div>`
+      ? `<div class="empty" style="grid-column:1/-1"><b>Ingen resultater for “${esc(jobsState.query.trim())}”</b><p class="muted">Prøv et andet ord, eller ryd søgningen for at se det hele.</p></div>`
       : list.join('');
-
-    $('jobs-footer').innerHTML = isJobs
-      ? `<p class="muted">Vil du se ledige stillinger eller læse mere om et job?</p><div class="go-chips"><a class="go-chip" href="${F.JobLinks.jobnet}" target="_blank" rel="noopener">Jobnet ↗</a><a class="go-chip" href="${F.JobLinks.ug}" target="_blank" rel="noopener">UddannelsesGuiden ↗</a></div>`
-      : `<p class="muted">Ledige lærepladser findes på Lærepladsen.dk. Praktik på videregående uddannelser finder du via dit studiested.</p><div class="go-chips"><a class="go-chip" href="${F.JobLinks.laerepladsen}" target="_blank" rel="noopener">Lærepladsen.dk ↗</a></div>`;
   }
 
   $('jobs-switch').addEventListener('click', (event) => {
